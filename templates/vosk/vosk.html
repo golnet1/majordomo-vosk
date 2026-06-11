@@ -1,0 +1,130 @@
+[#if ACTION="admin"#]
+<h3>
+    <img src="/img/modules/vosk.png" style="width:32px;height:32px;vertical-align:middle;margin-right:8px;">
+    <#LANG_VOSK_TITLE#>
+[#if IS_REMOTE="1"#]    <span id="vosk_status_indicator" style="display:inline-block;width:12px;height:12px;border-radius:50%;background-color:[#if REMOTE_CONNECTED="1"#]#4CAF50[#else#]#f44336[#endif#];margin-left:8px;" title="[#if REMOTE_CONNECTED="1"#]<#LANG_VOSK_REMOTE_CONNECTED#>[#else#]<#LANG_VOSK_REMOTE_DISCONNECTED#>[#endif#]"></span>
+    <small id="vosk_status_text" class="text-muted" style="margin-left:4px;">[#if REMOTE_CONNECTED="1"#]<#LANG_VOSK_REMOTE_CONNECTED#>[#else#]<#LANG_VOSK_REMOTE_DISCONNECTED#>[#endif#]</small>
+[#else#]
+[#if LOCAL_INSTALLED="2"#]    <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background-color:#ff9800;margin-left:8px;" title="устанавливается"></span>
+    <small class="text-muted" style="margin-left:4px;">устанавливается</small>
+[#else#]
+    <span id="vosk_status_indicator" style="display:inline-block;width:12px;height:12px;border-radius:50%;background-color:[#if LOCAL_INSTALLED="1"#]#4CAF50[#else#]#f44336[#endif#];margin-left:8px;" title="[#if LOCAL_INSTALLED="1"#]установлен[#else#]не установлен[#endif#]"></span>
+    <small id="vosk_status_text" class="text-muted" style="margin-left:4px;">[#if LOCAL_INSTALLED="1"#]установлен[#else#]не установлен[#endif#]</small>
+[#if LOCAL_INSTALLED="0"#]
+    <form method="post" action="?action=vosk&tab=status&cmd=install_local" style="display:inline;margin-left:8px;">
+        <button type="submit" class="btn btn-sm btn-primary">Установить</button>
+    </form>
+[#endif#]
+[#endif#]
+[#endif#]
+<script>
+(function() {
+    var indicator = document.getElementById('vosk_status_indicator');
+    var text = document.getElementById('vosk_status_text');
+    if (!indicator || !text) return;
+    function checkStatus() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api.php/module/vosk/status', true);
+        xhr.onload = function() {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data.is_remote) {
+                    var connected = data.connected;
+                    indicator.style.backgroundColor = connected ? '#4CAF50' : '#f44336';
+                    indicator.title = connected ? 'подключён' : 'не подключён';
+                    text.textContent = connected ? 'подключён' : 'не подключён';
+                } else {
+                    var st = data.local_installed;
+                    if (st === '2') {
+                        indicator.style.backgroundColor = '#ff9800';
+                        indicator.title = 'устанавливается';
+                        text.textContent = 'устанавливается';
+                    } else if (st === '1') {
+                        indicator.style.backgroundColor = '#4CAF50';
+                        indicator.title = 'установлен';
+                        text.textContent = 'установлен';
+                    } else {
+                        indicator.style.backgroundColor = '#f44336';
+                        indicator.title = 'не установлен';
+                        text.textContent = 'не установлен';
+                    }
+                }
+            } catch(e) {}
+        };
+        xhr.onerror = function() {
+            indicator.style.backgroundColor = '#f44336';
+            indicator.title = 'не подключён';
+            text.textContent = 'не подключён';
+        };
+        xhr.send();
+    }
+    setInterval(checkStatus, 5000);
+    checkStatus();
+})();
+</script>
+[#endif#]
+</h3>
+<hr>
+
+<ul class="nav nav-tabs">
+    <li [#if TAB_STATUS="1"#]class="active"[#endif#]><a href="?action=vosk&tab=status"><#LANG_VOSK_STATUS#></a></li>
+    <li [#if TAB_SETTINGS="1"#]class="active"[#endif#]><a href="?action=vosk&tab=settings"><#LANG_VOSK_SETTINGS#></a></li>
+    <li [#if TAB_MODELS="1"#]class="active"[#endif#]><a href="?action=vosk&tab=models"><#LANG_VOSK_MODELS#></a></li>
+    <li [#if TAB_HELP="1"#]class="active"[#endif#]><a href="?action=vosk&tab=help"><#LANG_VOSK_HELP#></a></li>
+</ul>
+<br>
+
+[#if TAB_STATUS="1"#]
+<div class="panel panel-default">
+    <div class="panel-heading"><#LANG_VOSK_SERVICE_STATUS#></div>
+    <div class="panel-body">
+        <table class="table table-bordered">
+            <tr>
+                <td style="width:200px;"><#LANG_VOSK_MODEL#></td>
+                <td>[#MODEL_NAME#] [#if MODEL_EXISTS="1"#]<span class="label label-success"><#LANG_VOSK_FOUND#></span>[#else#]<span class="label label-danger"><#LANG_VOSK_NOT_FOUND#></span>[#endif#]</td>
+            </tr>
+            <tr>
+                <td><#LANG_VOSK_LAST_TEXT#></td>
+                <td id="last_text_value">[#LAST_TEXT#]</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading"><#LANG_VOSK_VOICE_CONTROL#></div>
+    <div class="panel-body text-center">
+        <p><#LANG_VOSK_HELP_NOTE_TEXT#></p>
+        <p><#LANG_VOSK_VOICE_CONTROL_HINT#></p>
+    </div>
+</div>
+[#endif#]
+
+[#if TAB_SETTINGS="1"#]
+    [#inc settings.html#]
+[#endif#]
+
+[#if TAB_MODELS="1"#]
+    [#inc models.html#]
+[#endif#]
+
+[#if TAB_HELP="1"#]
+    [#inc help.html#]
+[#endif#]
+[#endif#]
+
+[#if ACTION!="admin"#]
+<script>
+(function () {
+    if (window.__voskLoaded) return;
+    window.__voskLoaded = true;
+    window.VOSK_CONFIG = window.VOSK_CONFIG || {};
+    window.VOSK_CONFIG.triggerPhrases = JSON.parse('[#TRIGGER_PHRASES#]');
+    window.VOSK_CONFIG.apiUrl = '/api.php/module/vosk/';
+    var s = document.createElement('script');
+    s.src = '/templates/vosk/js/vosk.js?' + Date.now();
+    s.async = true;
+    document.head.appendChild(s);
+})();
+</script>
+[#endif#]

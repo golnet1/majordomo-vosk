@@ -1,0 +1,241 @@
+<div id="vosk_ptt_widget" style="text-align:center;padding:20px;">
+    <button id="vosk_listen_btn" class="btn btn-success btn-lg" style="width:200px;height:80px;font-size:24px;border-radius:40px;">
+        🎤 <#LANG_VOSK_START_LISTEN#>
+    </button>
+    <div id="vosk_status_msg" style="margin-top:15px;font-size:14px;color:#666;"><#LANG_VOSK_CLICK_TO_START#></div>
+    <div id="vosk_result" style="margin-top:10px;font-size:16px;font-weight:bold;color:#333;"></div>
+</div>
+
+<script>
+(function() {
+var btn = document.getElementById('vosk_listen_btn');
+var statusMsg = document.getElementById('vosk_status_msg');
+var resultDiv = document.getElementById('vosk_result');
+
+function setStatus(t) { statusMsg.textContent = t; }
+function setResult(t) { resultDiv.textContent = t; }
+function setBtnListen() {
+    btn.className = 'btn btn-success btn-lg';
+    btn.innerHTML = '🎤 <#LANG_VOSK_START_LISTEN#>';
+}
+function setBtnStop() {
+    btn.className = 'btn btn-danger btn-lg';
+    btn.innerHTML = '🔴 <#LANG_VOSK_STOP_LISTEN#>';
+}
+
+var isListening = false;
+var extIframe = null;
+
+function getExtIframe() {
+    if (!extIframe) extIframe = document.getElementById('vosk-mic-proxy');
+    return extIframe;
+}
+
+function canUseExt() {
+    return window.__voskMicReady && getExtIframe();
+}
+
+function waitForExt(cb, tries) {
+    tries = tries || 0;
+    if (tries > 50) { cb(false); return; }
+    if (canUseExt()) { cb(true); return; }
+    setTimeout(function() { waitForExt(cb, tries + 1); }, 100);
+}
+
+function startViaExt() {
+    setBtnStop();
+    setStatus('<#LANG_VOSK_ACCESSING_MIC#>');
+    setResult('');
+
+    window.addEventListener('message', function onMsg(e) {
+        var d = e.data;
+        if (!d || !d.type) return;
+        if (d.type === 'vosk_status') {
+            if (d.status === 'listening') setStatus('<#LANG_VOSK_LISTENING#>');
+            else if (d.status === 'speaking') setStatus('<#LANG_VOSK_SPEAKING#>');
+            else if (d.status === 'stopped') { setStatus('<#LANG_VOSK_STOPPED#>'); setBtnListen(); }
+        }
+        if (d.type === 'vosk_audio') {
+            sendWavToServer(d.audio);
+        }
+        if (d.type === 'vosk_error') {
+            setStatus('<#LANG_VOSK_MIC_ERROR#>: ' + d.message);
+            setBtnListen();
+            window.removeEventListener('message', onMsg);
+        }
+    });
+
+    getExtIframe().contentWindow.postMessage({ type: 'vosk_start' }, '*');
+    isListening = true;
+}
+
+function stopViaExt() {
+    isListening = false;
+    if (getExtIframe()) {
+        getExtIframe().contentWindow.postMessage({ type: 'vosk_stop' }, '*');
+    }
+    setBtnListen();
+}
+
+// ----- Direct getUserMedia (HTTPS / Firefox fallback) -----
+var audioContext = null, mediaStream = null, scriptNode = null;
+var isSpeaking = false, audioChunks = [], silenceFrames = 0, speechFrames = 0;
+var VAD_THRESHOLD = 0.02, SILENCE_MAX = 30, SPEECH_MIN = 5, FRAME_SIZE = 2048;
+
+function startDirect() {
+    setBtnStop();
+    setStatus('<#LANG_VOSK_ACCESSING_MIC#>');
+    setResult('');
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setStatus('<#LANG_VOSK_MIC_ERROR#>: HTTPS required. Use Firefox or install Vosk Mic Proxy extension');
+        setBtnListen();
+        return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+        mediaStream = stream;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        var source = audioContext.createMediaStreamSource(stream);
+
+        scriptNode = audioContext.createScriptProcessor(FRAME_SIZE, 1, 1);
+        source.connect(scriptNode);
+        scriptNode.connect(audioContext.destination);
+
+        isListening = true;
+        isSpeaking = false;
+        audioChunks = [];
+        silenceFrames = 0;
+        speechFrames = 0;
+
+        setStatus('<#LANG_VOSK_LISTENING#>');
+
+        scriptNode.onaudioprocess = function(e) {
+            if (!isListening) return;
+            var input = e.inputBuffer.getChannelData(0);
+            var sum = 0;
+            for (var i = 0; i < input.length; i++) sum += input[i] * input[i];
+            var rms = Math.sqrt(sum / input.length);
+
+            if (rms > VAD_THRESHOLD) {
+                speechFrames++;
+                silenceFrames = 0;
+                if (!isSpeaking) {
+                    isSpeaking = true;
+                    audioChunks = [];
+                    setStatus('<#LANG_VOSK_SPEAKING#>');
+                }
+                var buf16 = new Int16Array(input.length);
+                for (var i = 0; i < input.length; i++) {
+                    var s = Math.max(-1, Math.min(1, input[i]));
+                    buf16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                audioChunks.push(buf16.buffer);
+            } else {
+                if (isSpeaking) {
+                    silenceFrames++;
+                    if (silenceFrames >= SILENCE_MAX) {
+                        sendDirectAudio();
+                        isSpeaking = false;
+                        silenceFrames = 0;
+                        speechFrames = 0;
+                        setStatus('<#LANG_VOSK_LISTENING#>');
+                    }
+                }
+            }
+        };
+    }).catch(function(err) {
+        setStatus('<#LANG_VOSK_MIC_ERROR#>: ' + err.message);
+        setBtnListen();
+    });
+}
+
+function stopDirect() {
+    isListening = false;
+    isSpeaking = false;
+    if (scriptNode) { try { scriptNode.disconnect(); } catch(e) {} scriptNode = null; }
+    if (audioContext) { audioContext.close().then(function() { audioContext = null; }); }
+    if (mediaStream) { mediaStream.getTracks().forEach(function(t) { t.stop(); }); mediaStream = null; }
+    setStatus('<#LANG_VOSK_STOPPED#>');
+    setBtnListen();
+}
+
+function sendDirectAudio() {
+    if (audioChunks.length < SPEECH_MIN) { audioChunks = []; return; }
+    var totalLen = 0;
+    for (var i = 0; i < audioChunks.length; i++) totalLen += audioChunks[i].byteLength;
+    var wavBuffer = new ArrayBuffer(44 + totalLen);
+    var view = new DataView(wavBuffer);
+    function writeString(offset, str) {
+        for (var i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    }
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + totalLen, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, audioContext.sampleRate, true);
+    view.setUint32(28, audioContext.sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, totalLen, true);
+    var offset = 44;
+    for (var i = 0; i < audioChunks.length; i++) {
+        var src = new Uint8Array(audioChunks[i]);
+        for (var j = 0; j < src.length; j++) view.setUint8(offset++, src[j]);
+    }
+    audioChunks = [];
+    sendWavToServer(wavBuffer);
+}
+
+// ----- Send WAV to server -----
+function sendWavToServer(wavBuffer) {
+    setStatus('<#LANG_VOSK_PROCESSING#>');
+    setResult('...');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api.php/module/vosk/recognize', true);
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data.text) {
+                    setResult(data.text);
+                    var lt = document.getElementById('last_text_value');
+                    if (lt) lt.textContent = data.text;
+                    setStatus('<#LANG_VOSK_DONE#>');
+                } else {
+                    setResult('<#LANG_VOSK_NO_SPEECH#>');
+                }
+            } catch(e) { setStatus('<#LANG_VOSK_ERROR#>'); }
+        } else {
+            setStatus('<#LANG_VOSK_ERROR#> (HTTP ' + xhr.status + ')');
+        }
+    };
+    xhr.onerror = function() { setStatus('<#LANG_VOSK_CONNECTION_ERROR#>'); };
+    xhr.send(wavBuffer);
+}
+
+// ----- Main button handler -----
+btn.onclick = function() {
+    if (isListening) {
+        if (canUseExt()) stopViaExt(); else stopDirect();
+    } else {
+        waitForExt(function(ok) {
+            if (ok) startViaExt();
+            else startDirect();
+        });
+    }
+};
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (isListening) {
+        if (canUseExt()) stopViaExt(); else stopDirect();
+    }
+});
+})();
+</script>

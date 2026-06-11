@@ -1,0 +1,62 @@
+<div class="panel panel-default">
+    <div class="panel-heading"><#LANG_VOSK_HELP#></div>
+    <div class="panel-body">
+        <h4><#LANG_VOSK_HELP_USAGE#></h4>
+        <p><#LANG_VOSK_HELP_USAGE_TEXT#></p>
+        <h4><#LANG_VOSK_HELP_TRIGGER#></h4>
+        <p><#LANG_VOSK_HELP_TRIGGER_TEXT#></p>
+        <p><strong>Важно:</strong> после изменения фразы-триггера в настройках необходимо <strong>обновить страницу</strong>, на которой работает микрофон (любая страница, открытая в браузере). Без обновления будет использоваться старая фраза-триггер.</p>
+        <p>Если поле «Фраза-триггер» оставить пустым, по умолчанию используется слово <strong>«мажордом»</strong>. В окне распознавания отображается подсказка с текущей фразой-триггером.</p>
+        <h4><#LANG_VOSK_HELP_INSTALL#></h4>
+        <pre># pip install vosk
+# wget https://alphacephei.com/vosk/models/vosk-model-small-ru-0.22.zip
+# unzip vosk-model-small-ru-0.22.zip -d /opt/vosk/models/</pre>
+        <h4><#LANG_VOSK_HELP_REMOTE#></h4>
+        <p><#LANG_VOSK_HELP_REMOTE_TEXT#></p>
+        <ol>
+            <li>Установите Python + vosk на удалённом сервере: <code>pip install vosk</code></li>
+            <li>Если планируете использовать sherpa-onnx модели (<code>vosk-model-ru-0.54</code>), установите также: <code>pip install sherpa-onnx</code></li>
+            <li>Скопируйте модель (например, <code>vosk-model-small-ru-0.22</code>) на удалённый сервер</li>
+            <li>Скопируйте <code>vosk_server.py</code> с сервера Majordomo (путь: <code>modules/vosk/lib/vosk_server.py</code>) на удалённый сервер в любую директорию</li>
+            <li>Поместите модели в одну директорию (например, <code>/opt/vosk/models/</code>)</li>
+            <li>Запустите:<br>
+                <code>python3 vosk_server.py --models-dir /opt/vosk/models --port 5001</code><br>
+                <small>Порт 5001 используется, чтобы не конфликтовать с Piper TTS (по умолчанию 5000). Если Piper не установлен, можно использовать 5000.</small></li>
+            <li>В настройках модуля укажите IP и порт сервера (например, <code>192.168.1.100:5001</code>). Если порт не указан, используется 5001. Префикс <code>http://</code> и путь <code>/recognize</code> модуль подставит сам.</li>
+        </ol>
+        <p><#LANG_VOSK_HELP_REMOTE_NOTE#></p>
+        <p><#LANG_VOSK_HELP_REMOTE_MODELS#></p>
+        <p><strong>Важно для sherpa-onnx моделей:</strong> если на удалённом сервере используются модели типа Zipformer2 (<code>vosk-model-ru-0.54</code>), на нём дополнительно нужно установить <code>sherpa-onnx</code>:
+        <pre>pip3 install sherpa-onnx</pre>
+        Без этого пакета vosk_server.py сможет загружать только старые Vosk Kaldi-модели (<code>vosk-model-small-ru-0.22</code> и т.п.), а sherpa-onnx будут выдавать ошибку 500 при активации.</p>
+        <h4>Автоустановка systemd-службы</h4>
+        <p><code>vosk_server.py</code> при запуске с <code>sudo</code> автоматически создаёт systemd-службу <code>vosk-server</code>, добавляет её в автозагрузку и запускает, после чего завершается. При повторном запуске служба уже существует, и скрипт работает в обычном режиме.</p>
+        <p>Чтобы пропустить автоустановку (например, при тестировании): <code>python3 vosk_server.py --no-service</code></p>
+        <p>Управление службой вручную:</p>
+        <pre>sudo systemctl stop vosk-server
+sudo systemctl start vosk-server
+sudo systemctl restart vosk-server
+sudo systemctl disable vosk-server</pre>
+        <h4><#LANG_VOSK_HELP_NOTE#></h4>
+        <p><#LANG_VOSK_HELP_NOTE_TEXT#></p>
+        <h4>Расширение для Chrome/Edge</h4>
+        <p>Если микрофон не работает (ошибка "HTTPS required"):</p>
+        <ol>
+            <li>Скачайте расширение: <a href="/downloads/vosk-mic.zip" target="_blank">vosk-mic.zip</a></li>
+            <li>Распакуйте в папку</li>
+            <li>Откройте <code>chrome://extensions</code></li>
+            <li>Включите "Режим разработчика"</li>
+            <li>Нажмите "Загрузить распакованное расширение" и выберите папку</li>
+            <li>Обновите страницу — микрофон заработает</li>
+        </ol>
+        <h4>Альтернатива: флаг Chrome (без расширения)</h4>
+        <p>Вместо расширения можно разрешить <code>getUserMedia</code> на HTTP через флаг браузера:</p>
+        <ol>
+            <li>Откройте <code>chrome://flags</code> в адресной строке</li>
+            <li>Найдите флаг <code>#unsafely-treat-insecure-origin-as-secure</code> (в поиске наберите «insecure»)</li>
+            <li>В поле «Add allowed insecure origins for bypassing secure origin checks» (или похожее название) впишите <code>http://dacha</code> (или ваш IP/домен) и нажмите Enter или кнопку добавления</li>
+            <li>Нажмите кнопку <strong>Relaunch</strong> (перезапустить браузер)</li>
+            <li>После перезапуска <code>getUserMedia</code> будет работать на <code>http://dacha</code> напрямую, без расширения</li>
+        </ol>
+    </div>
+</div>
