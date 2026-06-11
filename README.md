@@ -54,21 +54,21 @@ Browser (JS) → Web Audio API → VAD → WAV → HTTP POST → vosk_server.py 
 6. Install a model via the web interface (Models tab)
 7. Open any page with the microphone and start speaking
 
-### ASR Server Options
+### ASR Server Setup
 
-#### Local (recommended for single-server setups)
+`vosk_server.py` runs on a Linux server (can be the same machine as Majordomo or a separate one).
 
 ```bash
-# Run directly (will auto-create systemd service)
+# Will auto-create systemd service (run with sudo)
 sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001
 
-# Skip systemd auto-setup
+# Skip systemd auto-setup (for testing)
 python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
 ```
 
-#### Remote (separate ASR server)
-
-Run the same server on another machine, configure the IP:port in module settings.
+Then configure in module settings:
+- **Leave empty** — module connects to `127.0.0.1:5001` (same machine)
+- **Set IP:port** (e.g. `192.168.1.100:5001`) — module connects to remote ASR server
 
 ### Models
 
@@ -168,19 +168,19 @@ majordomo-vosk/
 
 ### Запуск ASR-сервера
 
-#### Локальный (рекомендуется для одного сервера)
+Запустите `vosk_server.py` на любом Linux-сервере (том же, где стоит Majordomo, или отдельном):
 
 ```bash
-# Запуск с автоустановкой systemd-сервиса
+# С автоустановкой systemd-сервиса (через sudo)
 sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001
 
-# Без автоустановки systemd
+# Без автоустановки systemd (для тестирования)
 python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
 ```
 
-#### Удалённый (отдельный ASR-сервер)
-
-Запустите тот же сервер на другой машине, укажите IP:порт в настройках модуля.
+Настройка в модуле:
+- **Оставить пустым** — модуль подключается к `127.0.0.1:5001` (тот же сервер)
+- **Указать IP:порт** (например, `192.168.1.100:5001`) — модуль подключается к удалённому ASR-серверу
 
 ### Модели
 
