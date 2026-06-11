@@ -113,7 +113,7 @@ majordomo-vosk/
 ├── languages/vosk_ru.php                        # Russian localization
 ├── scripts/cycle_vosk.php                       # Cron maintenance
 ├── img/modules/vosk.png                         # Module icon
-├── extensions/vosk-mic.zip                      # Chrome extension
+├── downloads/vosk-mic.zip                      # Chrome extension
 └── README.md
 ```
 
@@ -228,7 +228,7 @@ majordomo-vosk/
 ├── languages/vosk_ru.php                        # Русская локализация
 ├── scripts/cycle_vosk.php                       # Cron-скрипт
 ├── img/modules/vosk.png                         # Иконка модуля
-├── extensions/vosk-mic.zip                      # Расширение Chrome
+├── downloads/vosk-mic.zip                      # Расширение Chrome
 └── README.md
 ```
 
