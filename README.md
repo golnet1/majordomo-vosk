@@ -65,10 +65,10 @@ Run `vosk_server.py` on a dedicated Linux server, then set its IP:port in module
 
 ```bash
 # On the remote server (auto-creates systemd service with sudo)
-sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001
+sudo python3 vosk_server.py --models-dir /opt/vosk/models --port 5001
 
 # Without systemd (for testing)
-python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
+python3 vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
 ```
 
 In module settings, specify `IP:port` (e.g. `192.168.1.100:5001`).
@@ -98,8 +98,7 @@ majordomo-vosk/
 │       ├── vosk.class.php                       # Main module class
 │       ├── prepend.php                          # Front-end injector
 │       └── lib/
-│           ├── vosk_server.py                   # ASR HTTP server
-│           ├── vosk_asr.py                      # Recognition helper
+│           ├── vosk_asr.py                      # Recognition helper (local mode)
 │           ├── install_model.php                # Model installer
 │           └── requirements.txt                 # Python deps
 ├── templates/vosk/
@@ -113,7 +112,9 @@ majordomo-vosk/
 ├── languages/vosk_ru.php                        # Russian localization
 ├── scripts/cycle_vosk.php                       # Cron maintenance
 ├── img/modules/vosk.png                         # Module icon
-├── downloads/vosk-mic.zip                      # Chrome extension
+├── downloads/
+│   ├── vosk_server.py                           # ASR HTTP server (for remote server)
+│   └── vosk-mic.zip                             # Chrome extension
 └── README.md
 ```
 
@@ -180,10 +181,10 @@ PHP вызывает `vosk_asr.py` напрямую через `exec()` — за
 
 ```bash
 # На удалённом сервере (автоустановка systemd через sudo)
-sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001
+sudo python3 vosk_server.py --models-dir /opt/vosk/models --port 5001
 
 # Без systemd (для тестирования)
-python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
+python3 vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
 ```
 
 В настройках модуля укажите `IP:порт` (например, `192.168.1.100:5001`).
@@ -213,8 +214,7 @@ majordomo-vosk/
 │       ├── vosk.class.php                       # Основной класс модуля
 │       ├── prepend.php                          # Инжектор в браузер
 │       └── lib/
-│           ├── vosk_server.py                   # ASR HTTP-сервер
-│           ├── vosk_asr.py                      # Распознавание речи
+│           ├── vosk_asr.py                      # Распознавание речи (локальный режим)
 │           ├── install_model.php                # Установщик моделей
 │           └── requirements.txt                 # Python-зависимости
 ├── templates/vosk/
@@ -228,7 +228,9 @@ majordomo-vosk/
 ├── languages/vosk_ru.php                        # Русская локализация
 ├── scripts/cycle_vosk.php                       # Cron-скрипт
 ├── img/modules/vosk.png                         # Иконка модуля
-├── downloads/vosk-mic.zip                      # Расширение Chrome
+├── downloads/
+│   ├── vosk_server.py                           # ASR HTTP-сервер (для удалённого сервера)
+│   └── vosk-mic.zip                             # Расширение Chrome
 └── README.md
 ```
 
