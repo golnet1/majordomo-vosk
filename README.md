@@ -108,11 +108,14 @@ majordomo-vosk/
 │   ├── help.html                                # Help page
 │   ├── ptt.html                                 # Push-to-talk (legacy)
 │   ├── action_admin.html                        # Admin actions
-│   └── js/vosk.js                               # Client-side JS
+│   ├── js/vosk.js                               # Client-side JS
+│   └── files/
+│       ├── vosk_server.py                       # ASR HTTP server (for remote server)
+│       └── vosk-mic.zip                         # Chrome extension
 ├── languages/vosk_ru.php                        # Russian localization
 ├── scripts/cycle_vosk.php                       # Cron maintenance
 ├── img/modules/vosk.png                         # Module icon
-├── cms/files/
+├── templates/vosk/
 │   ├── vosk_server.py                           # ASR HTTP server (for remote server)
 │   └── vosk-mic.zip                             # Chrome extension
 └── README.md
@@ -224,11 +227,14 @@ majordomo-vosk/
 │   ├── help.html                                # Справка
 │   ├── ptt.html                                 # Push-to-Talk (legacy)
 │   ├── action_admin.html                        # Действия администратора
-│   └── js/vosk.js                               # Клиентский JS
+│   ├── js/vosk.js                               # Клиентский JS
+│   └── files/
+│       ├── vosk_server.py                       # ASR HTTP-сервер (для удалённого сервера)
+│       └── vosk-mic.zip                         # Расширение Chrome
 ├── languages/vosk_ru.php                        # Русская локализация
 ├── scripts/cycle_vosk.php                       # Cron-скрипт
 ├── img/modules/vosk.png                         # Иконка модуля
-├── cms/files/
+├── templates/vosk/
 │   ├── vosk_server.py                           # ASR HTTP-сервер (для удалённого сервера)
 │   └── vosk-mic.zip                             # Расширение Chrome
 └── README.md
