@@ -112,7 +112,9 @@ majordomo-vosk/
 │   └── files/
 │       ├── vosk_server.py                       # ASR HTTP server (for remote server)
 │       └── vosk-mic.zip                         # Chrome extension
-├── languages/vosk_ru.php                        # Russian localization
+├── languages/
+│   ├── vosk_en.php                              # English localization
+│   └── vosk_ru.php                              # Russian localization
 ├── scripts/cycle_vosk.php                       # Cron maintenance
 ├── img/modules/vosk.png                         # Module icon
 ├── templates/vosk/
@@ -231,7 +233,9 @@ majordomo-vosk/
 │   └── files/
 │       ├── vosk_server.py                       # ASR HTTP-сервер (для удалённого сервера)
 │       └── vosk-mic.zip                         # Расширение Chrome
-├── languages/vosk_ru.php                        # Русская локализация
+├── languages/
+│   ├── vosk_en.php                              # Английская локализация
+│   └── vosk_ru.php                              # Русская локализация
 ├── scripts/cycle_vosk.php                       # Cron-скрипт
 ├── img/modules/vosk.png                         # Иконка модуля
 ├── templates/vosk/
