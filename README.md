@@ -50,23 +50,28 @@ Browser (JS) → Web Audio API → VAD → WAV → HTTP POST → vosk_server.py 
 2. Copy `languages/vosk_ru.php` to your language directory
 3. Navigate to Admin → Modules → Install Vosk ASR
 4. Install Python dependencies: `pip install -r modules/vosk/lib/requirements.txt`
-5. Start the ASR server: `sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001`
-6. Install a model via the web interface (Models tab)
-7. Open any page with the microphone and start speaking
+5. Install a model via the web interface (Models tab)
+6. Open any page with the microphone and start speaking
 
-### ASR Server Setup
+### Recognition Modes
 
-Run `vosk_server.py` on the machine that will handle speech recognition (the ASR server):
+#### Local (default)
+
+PHP calls `vosk_asr.py` directly via `exec()` — no server needed. Just install the model and the module handles the rest. Leave the "Remote ASR URL" setting empty.
+
+#### Remote (separate ASR server)
+
+Run `vosk_server.py` on a dedicated Linux server, then set its IP:port in module settings.
 
 ```bash
+# On the remote server (auto-creates systemd service with sudo)
 sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001
+
+# Without systemd (for testing)
+python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
 ```
 
-To skip systemd auto-setup (e.g. for testing): `--no-service`
-
-In module settings specify where the module should connect:
-- **Empty** — `127.0.0.1:5001` (ASR on the same server as Majordomo)
-- **IP:port** — remote ASR server (e.g. `192.168.1.100:5001`)
+In module settings, specify `IP:port` (e.g. `192.168.1.100:5001`).
 
 ### Models
 
@@ -160,23 +165,28 @@ majordomo-vosk/
 2. Скопируйте `languages/vosk_ru.php` в директорию языков
 3. Зайдите в Администрирование → Модули → Установить Vosk ASR
 4. Установите Python-зависимости: `pip install -r modules/vosk/lib/requirements.txt`
-5. Запустите ASR-сервер: `sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001`
-6. Установите модель через веб-интерфейс (вкладка «Модели»)
-7. Откройте любую страницу с микрофоном и начинайте говорить
+5. Установите модель через веб-интерфейс (вкладка «Модели»)
+6. Откройте любую страницу с микрофоном и начинайте говорить
 
-### Запуск ASR-сервера
+### Режимы распознавания
 
-Запустите `vosk_server.py` на машине, которая будет обрабатывать распознавание речи (ASR-сервер):
+#### Локальный (по умолчанию)
+
+PHP вызывает `vosk_asr.py` напрямую через `exec()` — запускать сервер не нужно. Достаточно установить модель. Поле «REMOTE_ASR_URL» в настройках оставьте пустым.
+
+#### Удалённый (отдельный ASR-сервер)
+
+Запустите `vosk_server.py` на выделенном Linux-сервере, укажите его IP:порт в настройках модуля.
 
 ```bash
+# На удалённом сервере (автоустановка systemd через sudo)
 sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001
+
+# Без systemd (для тестирования)
+python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
 ```
 
-Чтобы пропустить автоустановку systemd (например, для тестирования): `--no-service`
-
-В настройках модуля укажите, куда подключаться:
-- **Пусто** — `127.0.0.1:5001` (ASR на том же сервере, что и Majordomo)
-- **IP:порт** — удалённый ASR-сервер (например, `192.168.1.100:5001`)
+В настройках модуля укажите `IP:порт` (например, `192.168.1.100:5001`).
 
 ### Модели
 
