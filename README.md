@@ -56,19 +56,17 @@ Browser (JS) → Web Audio API → VAD → WAV → HTTP POST → vosk_server.py 
 
 ### ASR Server Setup
 
-`vosk_server.py` runs on a Linux server (can be the same machine as Majordomo or a separate one).
+Run `vosk_server.py` on the machine that will handle speech recognition (the ASR server):
 
 ```bash
-# Will auto-create systemd service (run with sudo)
 sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001
-
-# Skip systemd auto-setup (for testing)
-python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
 ```
 
-Then configure in module settings:
-- **Leave empty** — module connects to `127.0.0.1:5001` (same machine)
-- **Set IP:port** (e.g. `192.168.1.100:5001`) — module connects to remote ASR server
+To skip systemd auto-setup (e.g. for testing): `--no-service`
+
+In module settings specify where the module should connect:
+- **Empty** — `127.0.0.1:5001` (ASR on the same server as Majordomo)
+- **IP:port** — remote ASR server (e.g. `192.168.1.100:5001`)
 
 ### Models
 
@@ -168,19 +166,17 @@ majordomo-vosk/
 
 ### Запуск ASR-сервера
 
-Запустите `vosk_server.py` на любом Linux-сервере (том же, где стоит Majordomo, или отдельном):
+Запустите `vosk_server.py` на машине, которая будет обрабатывать распознавание речи (ASR-сервер):
 
 ```bash
-# С автоустановкой systemd-сервиса (через sudo)
 sudo python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001
-
-# Без автоустановки systemd (для тестирования)
-python3 modules/vosk/lib/vosk_server.py --models-dir /opt/vosk/models --port 5001 --no-service
 ```
 
-Настройка в модуле:
-- **Оставить пустым** — модуль подключается к `127.0.0.1:5001` (тот же сервер)
-- **Указать IP:порт** (например, `192.168.1.100:5001`) — модуль подключается к удалённому ASR-серверу
+Чтобы пропустить автоустановку systemd (например, для тестирования): `--no-service`
+
+В настройках модуля укажите, куда подключаться:
+- **Пусто** — `127.0.0.1:5001` (ASR на том же сервере, что и Majordomo)
+- **IP:порт** — удалённый ASR-сервер (например, `192.168.1.100:5001`)
 
 ### Модели
 
