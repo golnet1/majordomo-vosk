@@ -1,3 +1,7 @@
+Allow from all
+
 <Files "vosk_server.py">
+  Order Allow,Deny
+  Allow from all
   ForceType application/octet-stream
 </Files>
