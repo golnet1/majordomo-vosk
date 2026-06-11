@@ -1,4 +1,3 @@
 <Files "vosk_server.py">
   ForceType application/octet-stream
-  Header set Content-Disposition "attachment"
 </Files>
