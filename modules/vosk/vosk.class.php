@@ -612,7 +612,19 @@ class vosk extends module
                     exit;
                 }
 
-                $tmpFile = tempnam(sys_get_temp_dir(), 'vosk_') . '.wav';
+                $lockDir = sys_get_temp_dir();
+                $lockFile = $lockDir . '/vosk_recognize.lock';
+                $lockTimeout = 30;
+
+                $fp = fopen($lockFile, 'c');
+                if ($fp && !flock($fp, LOCK_EX | LOCK_NB)) {
+                    fclose($fp);
+                    header('Content-Type: application/json');
+                    echo json_encode(array('text' => '', 'success' => false, 'busy' => true));
+                    exit;
+                }
+
+                $tmpFile = tempnam($lockDir, 'vosk_') . '.wav';
                 file_put_contents($tmpFile, $audioData);
 
                 $pythonBin = $this->config['PYTHON_BIN'];
@@ -624,6 +636,11 @@ class vosk extends module
                 $output = array();
                 exec($cmd . ' 2>/dev/null', $output, $ret);
                 @unlink($tmpFile);
+
+                if ($fp) {
+                    flock($fp, LOCK_UN);
+                    fclose($fp);
+                }
 
                 $result = implode('', $output);
                 $data = json_decode($result, true);

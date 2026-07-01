@@ -22,6 +22,7 @@
     var vadThreshold = 0.02;
     var waitTimer = null;
     var waitTimeoutMs = 5000;
+    var isProcessing = false;
 
     var statusEl = null;
     var textEl = null;
@@ -88,6 +89,8 @@
     function dongDing() { playTone(660, 880, 120, 250, 150); }
 
     function sendAudio(audioBlob) {
+        if (isProcessing) return Promise.resolve('');
+        isProcessing = true;
         var formData = new FormData();
         formData.append('audio', audioBlob, 'speech.wav');
 
@@ -96,10 +99,14 @@
             body: audioBlob,
             headers: { 'Content-Type': 'audio/wav' }
         }).then(function (r) { return r.json(); }).then(function (data) {
+            if (data && data.busy) return '';
             return data.text || '';
         }).catch(function (e) {
             console.warn('Vosk: recognize error', e);
             return '';
+        }).then(function (text) {
+            isProcessing = false;
+            return text;
         });
     }
 
